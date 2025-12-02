@@ -1,0 +1,26 @@
+# Build output (Compiled Java classes and JARs)
+target/
+*.class
+*.jar
+*.war
+
+# Database files (Your local data)
+data/
+*.mv.db
+*.trace.db
+
+# IDE Settings (VS Code, IntelliJ, Eclipse)
+.vscode/
+.idea/
+*.iml
+.settings/
+.classpath
+.project
+
+# OS Metadata
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

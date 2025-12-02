@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIT Tirupati | Classroom Booking</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #002147; --accent: #FFCE00; --light-bg: #f4f6f9; --text-dark: #2c3e50; }
+        body { background-color: var(--light-bg); font-family: 'Poppins', sans-serif; overflow-x: hidden; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- SPLIT SCREEN LOGIN LAYOUT --- */
+        #auth-screen { 
+            display: flex; height: 100vh; width: 100vw; position: fixed; z-index: 2000; 
+            margin-left: -260px; /* Counteract body content margin */
+        }
+        
+        /* Left Side: Campus Image */
+        .auth-image { 
+            flex: 1.5; 
+            /* PLACEHOLDER IMAGE - Replace URL with local path if needed */
+            background: url('https://iittp.ac.in/images/slideshow/08.jpg') no-repeat center center/cover;
+            position: relative;
+        }
+        .auth-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to right, rgba(0,33,71,0.6), rgba(0,33,71,0.2));
+            display: flex; align-items: flex-end; padding: 40px;
+        }
+        .auth-overlay h1 { color: white; font-weight: 700; font-size: 3rem; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+
+        /* Right Side: White Sidebar */
+        .auth-sidebar { 
+            flex: 1; background: white; padding: 50px; 
+            display: flex; flex-direction: column; justify-content: center;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        /* Credits Section */
+        .credits-box {
+            margin-top: auto; padding-top: 20px; border-top: 1px solid #eee;
+            text-align: center;
+        }
+        .credits-title { font-size: 0.75rem; text-transform: uppercase; color: #aaa; letter-spacing: 1px; font-weight: 600; }
+        .credits-name { font-size: 0.9rem; font-weight: 600; color: var(--primary); display: block; margin-top: 5px; }
+
+        /* --- APP STYLES --- */
+        .sidebar { height: 100vh; background: linear-gradient(180deg, var(--primary) 0%, #00152e 100%); color: white; position: fixed; width: 260px; padding-top: 20px; z-index: 1000; overflow-y: auto; }
+        .sidebar-brand { text-align: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-brand img { background: white; border-radius: 50%; padding: 5px; width: 80px; height: 80px; margin-bottom: 10px; }
+        .sidebar a { color: rgba(255,255,255,0.8); text-decoration: none; display: block; padding: 15px 25px; transition: 0.3s; font-weight: 500; border-left: 4px solid transparent; }
+        .sidebar a:hover, .sidebar a.active { color: var(--accent); background: rgba(255,255,255,0.05); border-left: 4px solid var(--accent); }
+        
+        .content { margin-left: 260px; padding: 40px; }
+        .card { border: none; border-radius: 12px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.2s; }
+        .stat-card { display: flex; align-items: center; padding: 20px; }
+        .stat-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 15px; }
+        .empty-state { text-align: center; padding: 40px; color: #95a5a6; }
+        .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+        
+        /* Badges */
+        .badge-status { padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .bg-PENDING { background-color: #fff3cd; color: #856404; }
+        .bg-CONFIRMED { background-color: #d4edda; color: #155724; }
+        .bg-REJECTED { background-color: #f8d7da; color: #721c24; }
+        .bg-CANCELLED { background-color: #e9ecef; color: #6c757d; }
+        .bg-OVERRIDDEN { background-color: #e2e3e5; color: #383d41; text-decoration: line-through; }
+
+        .hidden { display: none !important; }
+        .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- Split Screen Auth -->
+    <div id="auth-screen">
+        <div class="auth-image">
+            <div class="auth-overlay">
+                <h1>Classroom<br>Booking<br>System</h1>
+            </div>
+        </div>
+        <div class="auth-sidebar fade-in">
+            <div class="text-center mb-5">
+                <!-- LOGO IMAGE: Replace with local path if needed -->
+                <img src="https://upload.wikimedia.org/wikipedia/en/b/b0/Indian_Institute_of_Technology_Tirupati_Logo.svg" alt="IIT Logo" width="100">
+                <h4 class="mt-3 fw-bold" style="color: var(--primary)">IIT Tirupati</h4>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form">
+                <div class="form-floating mb-3">
+                    <input type="email" id="login-email" class="form-control" placeholder="E" required>
+                    <label>Email Address</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="password" id="login-pass" class="form-control" placeholder="P" required>
+                    <label>Password</label>
+                </div>
+                <button type="submit" class="btn btn-warning w-100 py-3 fw-bold shadow-sm">
+                    <i class="fas fa-sign-in-alt me-2"></i> Sign In
+                </button>
+                <div class="text-center mt-3">
+                    <a href="#" class="text-decoration-none" onclick="toggleAuth('register')">Create an Account</a>
+                </div>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form" class="hidden">
+                <h5 class="mb-3 text-secondary">Create Account</h5>
+                <select id="reg-role" class="form-select mb-2" onchange="handleRoleChange()">
+                    <option value="STUDENT">Student</option>
+                    <option value="FACULTY">Faculty</option>
+                    <option value="ADMIN">Admin</option>
+                </select>
+                <div id="secret-field" class="hidden mb-2"><input type="password" id="reg-secret" class="form-control" placeholder="Secret Key"></div>
+                <div class="row g-2 mb-2">
+                    <div class="col"><input id="reg-name" class="form-control" placeholder="Name" required></div>
+                    <div class="col"><input type="email" id="reg-email" class="form-control" placeholder="Email" required></div>
+                </div>
+                <input type="password" id="reg-pass" class="form-control mb-2" placeholder="Password" required>
+                <input id="reg-id" class="form-control mb-2" placeholder="Roll No / Employee ID" required>
+                <div id="prog-field" class="mb-2"><input id="reg-prog" class="form-control" placeholder="Program (B.Tech/M.Tech)"></div>
+                <div id="branch-field" class="mb-2"><input id="reg-branch" class="form-control" placeholder="Branch / Dept"></div>
+                <button type="submit" class="btn btn-primary w-100 mt-2">Sign Up</button>
+                <div class="text-center mt-3"><a href="#" onclick="toggleAuth('login')">Back to Login</a></div>
+            </form>
+
+            <!-- Developers Section -->
+            <div class="credits-box">
+                <div class="credits-title">Developed By</div>
+                <span class="credits-name">Ch Pranav Tej (CS24B057)</span>
+                <span class="credits-name">Shivam Purve (CS24B055)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-screen" class="hidden">
+        <div class="sidebar">
+            <div class="sidebar-brand">
+                <img src="https://upload.wikimedia.org/wikipedia/en/b/b0/Indian_Institute_of_Technology_Tirupati_Logo.svg" alt="Logo">
+                <h6 class="mb-0">IIT Tirupati</h6>
+                <small id="user-display" class="text-white-50">User</small>
+            </div>
+            <a href="#" onclick="nav('dashboard')" id="link-dashboard"><i class="fas fa-th-large me-3"></i> Dashboard</a>
+            <a href="#" onclick="nav('campus')" id="link-campus"><i class="fas fa-map-marked-alt me-3"></i> Campus Map</a>
+            <a href="#" onclick="nav('book')" id="link-book"><i class="fas fa-calendar-plus me-3"></i> Book Room</a>
+            <a href="#" onclick="nav('my-bookings')" id="link-my-bookings"><i class="fas fa-clock me-3"></i> My Bookings</a>
+            
+            <div id="admin-links" class="hidden">
+                <div class="text-white-50 small text-uppercase fw-bold px-4 mt-3 mb-2">Admin</div>
+                <a href="#" onclick="nav('approvals')" id="link-approvals"><i class="fas fa-check-double me-3"></i> Approvals</a>
+                <a href="#" onclick="nav('infra')" id="link-infra"><i class="fas fa-layer-group me-3"></i> Infrastructure</a>
+            </div>
+
+            <a href="#" onclick="nav('profile')" id="link-profile" class="mt-3"><i class="fas fa-user-circle me-3"></i> Profile</a>
+            <a href="#" onclick="logout()" style="color: #ff6b6b; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);"><i class="fas fa-sign-out-alt me-3"></i> Logout</a>
+        </div>
+
+        <div class="content">
+            
+            <!-- Dashboard -->
+            <div id="view-dashboard" class="view fade-in">
+                <h2 class="fw-bold mb-4">Dashboard</h2>
+                <div id="admin-stats" class="row mb-4 hidden">
+                    <div class="col-md-4"><div class="card stat-card"><div class="stat-icon bg-light text-primary"><i class="fas fa-door-open"></i></div><div><h3 class="mb-0" id="stat-rooms">0</h3><small class="text-muted">Total Rooms</small></div></div></div>
+                    <div class="col-md-4"><div class="card stat-card"><div class="stat-icon bg-light text-warning"><i class="fas fa-hourglass-half"></i></div><div><h3 class="mb-0" id="stat-pending">0</h3><small class="text-muted">Pending Requests</small></div></div></div>
+                    <div class="col-md-4"><div class="card stat-card"><div class="stat-icon bg-light text-success"><i class="fas fa-building"></i></div><div><h3 class="mb-0" id="stat-build">0</h3><small class="text-muted">Buildings</small></div></div></div>
+                </div>
+
+                <div class="card p-5 text-center bg-white" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');">
+                    <h1 class="text-primary fw-bold">Welcome to IIT Tirupati</h1>
+                    <p class="lead text-muted">Classroom & Resource Management System</p>
+                    <div class="mt-4">
+                        <button class="btn btn-primary px-4 py-2" onclick="nav('book')">Book a Room</button>
+                        <button class="btn btn-outline-primary px-4 py-2 ms-2" onclick="nav('campus')">View Map</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other Views (Simplified for brevity, same logic as before but layout kept) -->
+            <div id="view-campus" class="view hidden fade-in">
+                <h2 class="fw-bold mb-4">Campus Map</h2>
+                <div class="card p-4"><div id="campus-full-list"></div></div>
+            </div>
+
+            <div id="view-book" class="view hidden fade-in">
+                <h2 class="fw-bold mb-4">Book a Room</h2>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card p-3">
+                            <label class="fw-bold mb-2">Select Date</label>
+                            <input type="date" id="book-date" class="form-control mb-3">
+                            <button class="btn btn-primary w-100" onclick="loadCampusForBooking()">Search Availability</button>
+                        </div>
+                        <div id="booking-tree" class="mt-3"></div>
+                    </div>
+                    <div class="col-md-8">
+                        <div id="room-details" class="card p-4 hidden">
+                            <h3 id="rd-name" class="text-primary fw-bold"></h3>
+                            <p id="rd-res" class="text-muted small"></p>
+                            <hr>
+                            <h5>Available Slots</h5>
+                            <div id="slots-container" class="row g-2 mt-3"></div>
+                        </div>
+                        <div id="room-placeholder" class="empty-state"><i class="fas fa-hand-pointer"></i><p>Select a room from the left.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-my-bookings" class="view hidden fade-in">
+                <h2 class="fw-bold mb-4">My Bookings</h2>
+                <div class="card p-4">
+                    <table class="table align-middle">
+                        <thead class="table-light"><tr><th>Room</th><th>Time</th><th>Purpose</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody id="my-booking-table"></tbody>
+                    </table>
+                    <div id="empty-bookings" class="empty-state hidden"><i class="fas fa-calendar-times"></i><p>No bookings yet.</p></div>
+                </div>
+            </div>
+
+            <div id="view-approvals" class="view hidden fade-in">
+                <h2 class="fw-bold mb-4">Pending Approvals</h2>
+                <div class="card p-4">
+                    <table class="table align-middle">
+                        <thead class="table-light"><tr><th>User</th><th>Room</th><th>Time</th><th>Resources</th><th>Action</th></tr></thead>
+                        <tbody id="approval-table"></tbody>
+                    </table>
+                    <div id="empty-approvals" class="empty-state hidden"><i class="fas fa-check-circle"></i><p>No pending requests.</p></div>
+                </div>
+            </div>
+
+            <div id="view-infra" class="view hidden fade-in">
+                <h2 class="fw-bold mb-4">Manage Infrastructure</h2>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card p-3 mb-3 border-start border-4 border-primary">
+                            <h5>Add Building</h5>
+                            <input id="new-b-name" class="form-control mb-2" placeholder="Name">
+                            <input id="new-b-floors" type="number" class="form-control mb-2" placeholder="Floors">
+                            <button onclick="addBuilding()" class="btn btn-primary btn-sm w-100">Add</button>
+                        </div>
+                        <div class="card p-3 border-start border-4 border-warning">
+                            <h5>Add Room</h5>
+                            <select id="ar-build" class="form-select mb-2" onchange="loadFloorsForSelect()"></select>
+                            <select id="ar-floor" class="form-select mb-2"></select>
+                            <input id="ar-name" class="form-control mb-2" placeholder="Room No">
+                            <select id="ar-type" class="form-select mb-2"><option value="CLASSROOM">Classroom</option><option value="LAB">Lab</option></select>
+                            <input id="ar-cap" type="number" class="form-control mb-2" placeholder="Capacity">
+                            <label class="small fw-bold mt-2">Resources:</label>
+                            <div id="ar-res-check" class="check-grid mb-2"></div>
+                            <button onclick="addRoom()" class="btn btn-warning btn-sm w-100 fw-bold">Create Room</button>
+                        </div>
+                    </div>
+                    <div class="col-md-8"><div class="card p-4"><div id="infra-list" class="accordion accordion-flush"></div></div></div>
+                </div>
+            </div>
+
+            <!-- Profile Page (Fixed) -->
+            <div id="view-profile" class="view hidden fade-in">
+                <h2 class="fw-bold mb-4">My Profile</h2>
+                <div class="card p-4" style="max-width:600px">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Full Name</label>
+                            <input id="prof-name" class="form-control fw-bold">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Email</label>
+                            <input id="prof-email" class="form-control" disabled>
+                        </div>
+                    </div>
+                    
+                    <div id="prof-extra-fields" class="row mb-3">
+                        <!-- Dynamic Fields injected by JS -->
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted">New Password (Optional)</label>
+                        <input id="prof-pass" type="password" class="form-control" placeholder="Enter new password to change">
+                    </div>
+                    <button onclick="updateProfile()" class="btn btn-primary">Update Profile</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Confirm Booking</h5></div>
+                <div class="modal-body">
+                    <p>Booking <b id="bm-room"></b> for <b id="bm-time"></b></p>
+                    <input id="bm-purpose" class="form-control mb-3" placeholder="Purpose">
+                    <label class="fw-bold">Request Extra Resources:</label>
+                    <div id="bm-res-check" class="check-grid mt-2"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" onclick="confirmBooking()">Book</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const RESOURCES = ['Smartboard', 'Blackboard', 'Projector', 'Speakers', 'Mic', 'Collar Mic', 'Chalk Box'];
+        let currentUser = null, selectedRoom = null, selectedSlot = null;
+
+        // --- AUTH & INIT ---
+        function toggleAuth(mode) {
+            document.getElementById('login-form').classList.toggle('hidden', mode!=='login');
+            document.getElementById('register-form').classList.toggle('hidden', mode!=='register');
+        }
+        function handleRoleChange() {
+            const role = document.getElementById('reg-role').value;
+            document.getElementById('secret-field').classList.toggle('hidden', role==='STUDENT');
+            document.getElementById('prog-field').classList.toggle('hidden', role!=='STUDENT');
+        }
+
+        document.getElementById('login-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email: document.getElementById('login-email').value, password: document.getElementById('login-pass').value})
+            });
+            if(res.ok) { currentUser = await res.json(); initApp(); } else alert('Invalid Credentials');
+        }
+
+        document.getElementById('register-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const body = {
+                role: document.getElementById('reg-role').value,
+                name: document.getElementById('reg-name').value,
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-pass').value,
+                specificId: document.getElementById('reg-id').value,
+                branch: document.getElementById('reg-branch').value,
+                program: document.getElementById('reg-prog').value,
+                secretKey: document.getElementById('reg-secret').value
+            };
+            const res = await fetch('/api/register', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+            if(res.ok) { alert('Registered!'); toggleAuth('login'); } else alert(await res.text());
+        }
+
+        function initApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            document.getElementById('user-display').innerText = `${currentUser.name} | ${currentUser.role}`;
+            
+            if(currentUser.role === 'ADMIN') {
+                document.getElementById('admin-links').classList.remove('hidden');
+                document.getElementById('admin-stats').classList.remove('hidden');
+                loadStats();
+            }
+            nav('dashboard');
+            generateCheckboxes('ar-res-check'); 
+            generateCheckboxes('bm-res-check');
+        }
+        function logout() { location.reload(); }
+
+        // --- NAVIGATION ---
+        function nav(v) {
+            document.querySelectorAll('.view').forEach(e => e.classList.add('hidden'));
+            document.getElementById('view-'+v).classList.remove('hidden');
+            document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+            const lnk = document.getElementById('link-'+v);
+            if(lnk) lnk.classList.add('active');
+
+            if(v==='campus') loadCampusMap();
+            if(v==='my-bookings') loadMyBookings();
+            if(v==='approvals') loadApprovals();
+            if(v==='infra') loadInfra();
+            if(v==='profile') loadProfile();
+        }
+
+        // --- PROFILE (FIXED) ---
+        function loadProfile() {
+            document.getElementById('prof-name').value = currentUser.name;
+            document.getElementById('prof-email').value = currentUser.email;
+            
+            const extraContainer = document.getElementById('prof-extra-fields');
+            extraContainer.innerHTML = ''; // Clear previous
+
+            // Logic to populate immutable fields based on Role
+            if(currentUser.role === 'STUDENT') {
+                extraContainer.innerHTML = `
+                    <div class="col-md-4 mb-3"><label class="text-muted small">Roll Number</label><input class="form-control" value="${currentUser.studentId}" disabled></div>
+                    <div class="col-md-4 mb-3"><label class="text-muted small">Branch</label><input class="form-control" value="${currentUser.branch}" disabled></div>
+                    <div class="col-md-4 mb-3"><label class="text-muted small">Program</label><input class="form-control" value="${currentUser.program}" disabled></div>
+                `;
+            } else if(currentUser.role === 'FACULTY') {
+                extraContainer.innerHTML = `
+                    <div class="col-md-6 mb-3"><label class="text-muted small">Employee ID</label><input class="form-control" value="${currentUser.employeeId}" disabled></div>
+                    <div class="col-md-6 mb-3"><label class="text-muted small">Department</label><input class="form-control" value="${currentUser.department}" disabled></div>
+                `;
+            } else if(currentUser.role === 'ADMIN') {
+                extraContainer.innerHTML = `
+                    <div class="col-md-12 mb-3"><label class="text-muted small">Employee ID</label><input class="form-control" value="${currentUser.employeeId}" disabled></div>
+                `;
+            }
+        }
+
+        async function updateProfile() {
+            const res = await fetch('/api/profile', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: currentUser.id, name: document.getElementById('prof-name').value, password: document.getElementById('prof-pass').value})
+            });
+            if(res.ok) { currentUser = await res.json(); alert('Profile Updated'); }
+        }
+
+        // --- MY BOOKINGS (WITH CANCEL) ---
+        async function loadMyBookings() {
+            const res = await fetch(`/api/my-bookings/${currentUser.id}`);
+            const data = await res.json();
+            const tb = document.getElementById('my-booking-table');
+            document.getElementById('empty-bookings').classList.toggle('hidden', data.length > 0);
+            tb.innerHTML = '';
+            
+            data.forEach(b => {
+                let actionHtml = '';
+                // Allow cancellation if status is PENDING or CONFIRMED
+                if(b.status === 'PENDING' || b.status === 'CONFIRMED') {
+                    actionHtml = `<button class="btn btn-sm btn-outline-danger" onclick="cancelBooking(${b.id})">Cancel</button>`;
+                }
+
+                tb.innerHTML += `<tr>
+                    <td>${b.room.name}</td>
+                    <td>${b.startTime.replace('T', ' ')}</td>
+                    <td>${b.purpose}</td>
+                    <td><span class="badge-status bg-${b.status}">${b.status}</span></td>
+                    <td>${actionHtml}</td>
+                </tr>`;
+            });
+        }
+
+        async function cancelBooking(id) {
+            if(confirm("Are you sure you want to cancel this booking?")) {
+                const res = await fetch(`/api/cancel-booking/${id}`, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({userId: currentUser.id})
+                });
+                if(res.ok) { loadMyBookings(); } else { alert('Failed to cancel'); }
+            }
+        }
+
+        // --- CORE FUNCTIONS (Same as before) ---
+        async function loadStats() {
+            const res = await fetch('/api/stats');
+            const data = await res.json();
+            document.getElementById('stat-rooms').innerText = data.rooms;
+            document.getElementById('stat-pending').innerText = data.pending;
+            document.getElementById('stat-build').innerText = data.buildings;
+        }
+        function generateCheckboxes(elemId) {
+            const container = document.getElementById(elemId);
+            container.innerHTML = '';
+            RESOURCES.forEach(r => container.innerHTML += `<div class="form-check"><input class="form-check-input res-chk-${elemId}" type="checkbox" value="${r}" id="${elemId}-${r}"><label class="form-check-label small" for="${elemId}-${r}">${r}</label></div>`);
+        }
+        function getCheckedValues(elemId) { return Array.from(document.querySelectorAll(`.res-chk-${elemId}:checked`)).map(c => c.value).join(', '); }
+        async function loadCampusMap() {
+            const res = await fetch('/api/campus'); const data = await res.json(); const div = document.getElementById('campus-full-list');
+            div.innerHTML = ''; if(data.length === 0) div.innerHTML = '<div class="empty-state"><i class="fas fa-map"></i><p>Campus is empty.</p></div>';
+            data.forEach(b => div.innerHTML += `<div class="mb-4"><h5 class="fw-bold text-primary border-bottom pb-2">${b.name}</h5><div class="row g-3">${b.floors.map(f => `<div class="col-md-4"><div class="card p-3 h-100 bg-light"><h6 class="fw-bold text-muted">Floor ${f.floorNumber}</h6><div>${f.rooms.map(r => `<span class="badge bg-white text-dark border me-1 mb-1">${r.name}</span>`).join('') || '<small>No Rooms</small>'}</div></div></div>`).join('')}</div></div>`);
+        }
+        async function loadCampusForBooking() {
+            const date = document.getElementById('book-date').value; if(!date) return alert('Select Date');
+            const res = await fetch('/api/campus'); const data = await res.json(); const tree = document.getElementById('booking-tree');
+            tree.innerHTML = '';
+            data.forEach(b => { tree.innerHTML += `<div class="mb-2"><strong class="text-primary">${b.name}</strong></div>`; b.floors.forEach(f => { tree.innerHTML += `<div class="ms-3 mb-1"><small>Floor ${f.floorNumber}</small> ` + f.rooms.map(r => `<button class="btn btn-sm btn-outline-secondary py-0 px-2 m-1" onclick='loadSlots(${JSON.stringify(r)})'>${r.name}</button>`).join('') + `</div>`; }); });
+        }
+        async function loadSlots(room) {
+            selectedRoom = room; document.getElementById('room-placeholder').classList.add('hidden'); document.getElementById('room-details').classList.remove('hidden'); document.getElementById('rd-name').innerText = room.name; document.getElementById('rd-res').innerText = "Has: " + (room.resources || 'None');
+            const date = document.getElementById('book-date').value; const res = await fetch(`/api/slots?roomId=${room.id}&date=${date}`); const slots = await res.json();
+            const cont = document.getElementById('slots-container'); cont.innerHTML = '';
+            slots.forEach(s => {
+                let btnCls = 'btn-outline-success', txt = 'Book', dis = false;
+                if(s.status !== 'AVAILABLE') { btnCls = 'btn-outline-danger'; txt = 'Booked'; dis = true; if(currentUser.role === 'ADMIN' || (currentUser.role === 'FACULTY' && s.userRole === 'STUDENT')) { dis = false; txt = 'Override'; btnCls = 'btn-danger'; } }
+                cont.innerHTML += `<div class="col-6"><div class="p-2 border rounded d-flex justify-content-between align-items-center"><small class="fw-bold">${s.label}</small><button class="btn btn-sm ${btnCls}" ${dis?'disabled':''} onclick='initBooking("${s.start}","${s.end}","${s.label}")'>${txt}</button></div></div>`;
+            });
+        }
+        function initBooking(start, end, label) { selectedSlot = {start, end}; document.getElementById('bm-room').innerText = selectedRoom.name; document.getElementById('bm-time').innerText = label; new bootstrap.Modal(document.getElementById('bookingModal')).show(); }
+        async function confirmBooking() {
+            const body = { userId: currentUser.id, roomId: selectedRoom.id, startTime: selectedSlot.start, endTime: selectedSlot.end, purpose: document.getElementById('bm-purpose').value, resources: getCheckedValues('bm-res-check') };
+            const res = await fetch('/api/book', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+            alert(await res.text()); bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide(); loadSlots(selectedRoom);
+        }
+        async function loadInfra() {
+            const res = await fetch('/api/campus'); const data = await res.json(); const sel = document.getElementById('ar-build'); sel.innerHTML = '<option value="">Select Building</option>'; data.forEach(b => sel.innerHTML += `<option value="${b.id}">${b.name}</option>`);
+            const list = document.getElementById('infra-list'); list.innerHTML = '';
+            data.forEach(b => { list.innerHTML += `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cl-${b.id}">${b.name} <span class="ms-auto me-3 badge bg-secondary">${b.floors.length} Floors</span></button></h2><div id="cl-${b.id}" class="accordion-collapse collapse"><div class="accordion-body"><button class="btn btn-xs btn-outline-danger mb-2" onclick="del('building', ${b.id})">Delete Building</button><ul class="list-group list-group-flush">${b.floors.map(f => `<li class="list-group-item"><div class="d-flex justify-content-between"><strong>Floor ${f.floorNumber}</strong><button class="btn btn-sm text-danger" onclick="del('floor', ${f.id})"><i class="fas fa-trash"></i></button></div><div class="ms-3 mt-1">${f.rooms.map(r => `<span class="badge bg-light text-dark border me-1">${r.name} <i class="fas fa-times text-danger ms-1 cursor-pointer" onclick="del('room',${r.id})" style="cursor:pointer"></i></span>`).join('')}</div></li>`).join('')}</ul></div></div></div>`; });
+        }
+        async function del(type, id) { if(confirm(`Delete this ${type}?`)) { await fetch(`/api/${type}/${id}`, {method:'DELETE'}); loadInfra(); loadStats(); } }
+        async function addBuilding() { await fetch('/api/building', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: document.getElementById('new-b-name').value, floors: document.getElementById('new-b-floors').value })}); loadInfra(); loadStats(); }
+        async function loadFloorsForSelect() { const bId = document.getElementById('ar-build').value; if(!bId) return; const res = await fetch('/api/campus'); const data = await res.json(); const b = data.find(x => x.id == bId); const fSel = document.getElementById('ar-floor'); fSel.innerHTML = ''; b.floors.forEach(f => fSel.innerHTML += `<option value="${f.id}">Floor ${f.floorNumber}</option>`); }
+        async function addRoom() { const body = { floorId: document.getElementById('ar-floor').value, name: document.getElementById('ar-name').value, capacity: document.getElementById('ar-cap').value, type: document.getElementById('ar-type').value, resources: getCheckedValues('ar-res-check') }; await fetch('/api/room', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); alert('Room Added'); loadInfra(); loadStats(); }
+        async function loadApprovals() { const res = await fetch('/api/pending-approvals'); const data = await res.json(); document.getElementById('empty-approvals').classList.toggle('hidden', data.length > 0); const tb = document.getElementById('approval-table'); tb.innerHTML = ''; data.forEach(b => { tb.innerHTML += `<tr><td><b>${b.bookedBy.name}</b><br><small>${b.bookedBy.role}</small></td><td>${b.room.name}<br><small>${b.startTime.replace('T',' ')}</small></td><td>${b.requestedResources || '-'}</td><td><button class="btn btn-sm btn-success me-1" onclick="act(${b.id}, 'approve')"><i class="fas fa-check"></i></button><button class="btn btn-sm btn-danger" onclick="act(${b.id}, 'reject')"><i class="fas fa-times"></i></button></td></tr>`; }); }
+        async function act(id, type) { await fetch(`/api/${type}/${id}`, {method:'POST'}); loadApprovals(); loadStats(); }
+        
+        document.getElementById('book-date').valueAsDate = new Date();
+    </script>
+</body>
+</html>
