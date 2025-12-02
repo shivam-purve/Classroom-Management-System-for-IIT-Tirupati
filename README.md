@@ -4,7 +4,7 @@
 **Developed By:**
 *   **Ch Pranav Tej** (CS24B057)
 *   **Shivam Purve** (CS24B055)
-*   *2nd Year, Computer Science & Engineering, IIT Tirupati*
+*   *B.Tech 2nd Year, Computer Science & Engineering, IIT Tirupati*
 
 ---
 
@@ -158,3 +158,53 @@ ClassroomBookingSystem/
 │   │       ├── application.properties         # DB Config
 │   │       └── static/
 │   │           └── index.html                 # Single Page Application (Frontend)
+
+## 7. Authentication & Security
+
+The system implements a custom **Role-Based Access Control (RBAC)** mechanism to ensure data integrity and prevent unauthorized access.
+
+### A. Registration Logic
+We utilize a "Secret Key" validation system to prevent unauthorized users from registering as Faculty or Administrators.
+*   **Students:** Open registration. Requires valid Roll Number, Branch, and Program.
+*   **Faculty:** Requires the secret key `iit_fac_2025`.
+*   **Administrators:** Requires the secret key `iit_admin_2025`.
+
+### B. Profile Immutability
+To ensure the authenticity of user data, the system employs **Field Immutability** in the OOP model.
+*   Once registered, critical identifiers like **Roll Number**, **Employee ID**, **Branch**, and **Program** are **locked**.
+*   Users can only update their *Name* and *Password* via the Profile interface. This prevents identity spoofing (e.g., a student changing their branch to access specific labs).
+
+### C. Booking Ownership & Cancellation
+*   **Ownership Check:** The backend explicitly verifies the `session_user_id` against the `booking_owner_id` before allowing a cancellation. A student cannot cancel another student's booking via API manipulation.
+*   **Hierarchy Enforcement:** The logic prevents lower-tier users from overriding higher-tier users (e.g., A Faculty cannot override an Admin).
+
+---
+
+## 8. Limitations & Future Scope
+
+While the current system offers a robust solution for campus management, there are areas identified for future scaling and improvement.
+
+### Limitations
+1.  **Database Persistence:** Currently, the system uses **H2 Database** (File-based). While excellent for portability and development, it is not designed for high-concurrency production environments compared to PostgreSQL or MySQL.
+2.  **Session Management:** The application currently relies on client-side state management. For a campus-wide deployment, implementing **Spring Security** with JWT (JSON Web Tokens) would provide stateless, secure authentication.
+3.  **Notification System:** Currently, users must check the dashboard to see if their booking was overridden. There is no active email or SMS push notification system.
+
+### Future Scope
+1.  **Email Integration:** Integrating `JavaMailSender` to trigger automatic emails when:
+    *   A booking request is approved/rejected by Admin.
+    *   A priority override occurs (e.g., "Your slot was taken by Prof. X for an urgent lecture").
+2.  **Calendar Sync:** Integration with Google Calendar or Outlook to automatically add confirmed bookings to the user's personal calendar.
+3.  **Mobile Application:** Developing a React Native or Flutter mobile app to allow students to scan QR codes outside classrooms to check immediate availability.
+4.  **Analytics Dashboard:** providing the Administration with heatmaps showing which rooms are most frequently used and at what times, aiding in energy conservation planning.
+
+---
+
+## 9. Conclusion
+
+The **Classroom Booking System for IIT Tirupati** successfully addresses the logistical challenges of managing campus infrastructure. By strictly adhering to **Object-Oriented Programming principles**—such as Inheritance for user roles, Polymorphism for booking conflicts, and Composition for building structure—the codebase remains modular, readable, and easy to extend.
+
+This project not only streamlines the administrative process of room allocation but also ensures fair usage of resources through its transparency and priority-based logic. It stands as a comprehensive solution ready for further scaling as the institute grows.
+
+---
+**Course:** CS203M (Object Oriented Programming)
+**Institute:** IIT Tirupati
