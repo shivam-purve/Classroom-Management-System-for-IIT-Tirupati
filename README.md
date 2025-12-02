@@ -1,5 +1,5 @@
 # Classroom Booking System for IIT Tirupati
-### Object-Oriented Programming (CS2023) Course Project
+### Object-Oriented Programming (CS203M) Course Project
 
 **Developed By:**
 *   **Ch Pranav Tej** (CS24B057)
