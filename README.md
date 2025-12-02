@@ -158,6 +158,7 @@ ClassroomBookingSystem/
 │   │       ├── application.properties         # DB Config
 │   │       └── static/
 │   │           └── index.html                 # Single Page Application (Frontend)
+```
 
 ## 7. Authentication & Security
 
