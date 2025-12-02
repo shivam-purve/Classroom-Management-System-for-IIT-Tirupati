@@ -1,7 +1,7 @@
 package com.iit.booking.model.enums;
 
 public enum BookingStatus { 
-    PENDING, 
+    PENDING,
     CONFIRMED, 
     REJECTED, 
     OVERRIDDEN,
